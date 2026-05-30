@@ -1,3 +1,26 @@
+# Spotify Clone (React Native + Supabase)
+
+Ce projet est un clone de Spotify développé en React Native et propulsé par Supabase pour la base de données, l'authentification et le stockage de fichiers audio.
+
+## 🚀 Intégration Supabase & Services (Validé ✅)
+
+L'infrastructure backend et la communication API client ont été mises en place :
+* [supabase_schema.sql](file:///home/skjuve/Vidéos/spotifyapp/supabase_schema.sql) : Schéma relationnel complet (Profils, Artistes, Albums, Morceaux, Playlists, Favoris, Historique).
+* [seed_data.sql](file:///home/skjuve/Vidéos/spotifyapp/seed_data.sql) : Données d'essais SQL avec des morceaux et des fichiers audio MP3 hébergés en ligne.
+* [repartition_taches.md](file:///home/skjuve/Vidéos/spotifyapp/repartition_taches.md) : Planification des tâches (8 membres) et guide d'utilisation des services de code.
+* [src/config/env.ts](file:///home/skjuve/Vidéos/spotifyapp/src/config/env.ts) : Configuration de vos identifiants Supabase.
+* [src/services/supabaseClient.ts](file:///home/skjuve/Vidéos/spotifyapp/src/services/supabaseClient.ts) : Client API avec persistance locale de session.
+* [src/services/authService.ts](file:///home/skjuve/Vidéos/spotifyapp/src/services/authService.ts) : Inscription, connexion, déconnexion et profils.
+* [src/services/musicService.ts](file:///home/skjuve/Vidéos/spotifyapp/src/services/musicService.ts) : CRUD musiques, recherche, favoris et historique d'écoutes.
+
+### 🛠️ Configuration Initiale de l'Équipe :
+1. **Dépendances** : Lancez `npm install` pour installer tous les modules (y compris `@supabase/supabase-js` et `@react-native-async-storage/async-storage` ajoutés par le membre 8).
+2. **Identifiants** : Remplissez les clés de votre console Supabase dans [src/config/env.ts](file:///home/skjuve/Vidéos/spotifyapp/src/config/env.ts) (voir le modèle [.env.example](file:///home/skjuve/Vidéos/spotifyapp/.env.example)).
+3. **Base de données** : Copiez-collez et exécutez le script [supabase_schema.sql](file:///home/skjuve/Vidéos/spotifyapp/supabase_schema.sql) puis [seed_data.sql](file:///home/skjuve/Vidéos/spotifyapp/seed_data.sql) dans l'éditeur SQL de votre projet Supabase.
+4. **Feuille de route** : Lisez le guide [repartition_taches.md](file:///home/skjuve/Vidéos/spotifyapp/repartition_taches.md) pour récupérer les exemples de code pour votre tâche (Membres 1 à 7).
+
+---
+
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
 # Getting Started
