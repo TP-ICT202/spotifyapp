@@ -72,30 +72,46 @@ export default function App() {
   const goToPreviousSong = () => goToAdjacentSong(-1);
 
   const handleLogout = async () => {
-    await authService.signOut();
+    try {
+      await authService.signOut();
+    } catch {
+      // Déconnexion locale même si le réseau échoue
+    }
     setAuthScreen('login');
+    setCatalogReady(false);
     setCurrentSong(null);
     setIsPlaying(false);
   };
 
   useEffect(() => {
-    authService.getCurrentProfile().then(profile => {
-      if (profile) {
-        setAuthScreen('app');
-      } else {
-        setAuthScreen('login');
+    let mounted = true;
+
+    const bootstrapAuth = async () => {
+      try {
+        const profile = await authService.getCurrentProfile();
+        if (!mounted) return;
+        setAuthScreen(profile ? 'app' : 'login');
+      } catch {
+        if (mounted) setAuthScreen('login');
       }
-    });
+    };
+
+    bootstrapAuth();
 
     const subscription = authService.onAuthStateChange((event, session) => {
+      if (!mounted) return;
       if (event === 'SIGNED_IN' && session) {
         setAuthScreen('app');
       } else if (event === 'SIGNED_OUT') {
         setAuthScreen('login');
+        setCatalogReady(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -103,9 +119,12 @@ export default function App() {
 
     let cancelled = false;
     (async () => {
-      await catalogService.loadCatalog();
-      await refreshFavorites();
-      if (!cancelled) setCatalogReady(true);
+      try {
+        await catalogService.loadCatalog();
+        await refreshFavorites();
+      } finally {
+        if (!cancelled) setCatalogReady(true);
+      }
     })();
 
     return () => {
