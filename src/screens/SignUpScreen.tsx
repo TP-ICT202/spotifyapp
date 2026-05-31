@@ -320,16 +320,16 @@ const styles = StyleSheet.create({
   },
   bgCircle2: {
     position: 'absolute', width: 200, height: 200, borderRadius: 100,
-    backgroundColor: '##3aed4f', opacity: 0.08, bottom: 60, right: -60,
+    backgroundColor: '#3aed4f', opacity: 0.08, bottom: 60, right: -60,
   },
   scrollContent: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
   header: { alignItems: 'center', marginBottom: 28, position: 'relative' },
   backBtn: { alignSelf: 'flex-start', paddingVertical: 8, marginBottom: 16 },
-  backText: { color: '##3aed4f', fontSize: 15, fontWeight: '600' },
+  backText: { color: '#3aed4f', fontSize: 15, fontWeight: '600' },
   logoWrap: {
-    width: 56, height: 56, borderRadius: 18, backgroundColor: '##3aed4f',
+    width: 56, height: 56, borderRadius: 18, backgroundColor: '#3aed4f',
     alignItems: 'center', justifyContent: 'center', marginBottom: 10,
-    shadowColor: '##3aed4f', shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#3aed4f', shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.5, shadowRadius: 12, elevation: 10,
   },
   logoIcon: { fontSize: 24, color: '#fff' },
@@ -371,16 +371,16 @@ const styles = StyleSheet.create({
   },
   errorText: { color: '#F87171', fontSize: 13, textAlign: 'center' },
   btnPrimary: {
-    backgroundColor: '##3aed4f', borderRadius: 14, paddingVertical: 16,
+    backgroundColor: '#3aed4f', borderRadius: 14, paddingVertical: 16,
     alignItems: 'center', marginTop: 8,
-    shadowColor: '##3aed4f', shadowOffset: { width: 0, height: 6 },
+    shadowColor: '#3aed4f', shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.5, shadowRadius: 12, elevation: 10,
   },
   btnDisabled: { opacity: 0.6 },
   btnPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
   linkBtn: { alignItems: 'center', marginTop: 20 },
   linkText: { color: '#666', fontSize: 14 },
-  linkHighlight: { color: '##3aed4f', fontWeight: '600' },
+  linkHighlight: { color: '#3aed4f', fontWeight: '600' },
   // Succès
   successWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   successIcon: {
@@ -391,6 +391,6 @@ const styles = StyleSheet.create({
   successEmoji: { fontSize: 36 },
   successTitle: { fontSize: 28, fontWeight: '700', color: '#fff', marginBottom: 12 },
   successText: { fontSize: 15, color: '#888', textAlign: 'center', lineHeight: 22, marginBottom: 8 },
-  successEmail: { color: '##3aed4f', fontWeight: '600' },
+  successEmail: { color: '#3aed4f', fontWeight: '600' },
   successHint: { fontSize: 13, color: '#555', textAlign: 'center', marginBottom: 36 },
 });

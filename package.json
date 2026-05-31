@@ -7,15 +7,20 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "sync:music": "node scripts/sync-local-music-to-supabase.mjs",
+    "icons": "python3 scripts/generate_app_icons.py"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-native/new-app-screen": "0.85.3",
     "@supabase/supabase-js": "^2.106.2",
+    "dotenv": "^17.4.2",
     "react": "19.2.3",
     "react-native": "0.85.3",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-url-polyfill": "^3.0.0",
+    "react-native-video": "^6.19.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

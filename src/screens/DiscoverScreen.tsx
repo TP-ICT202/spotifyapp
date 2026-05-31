@@ -1,275 +1,274 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import {
-  View, Text, StyleSheet, Image, TouchableOpacity, StatusBar, ScrollView,
-  type ViewStyle, type ImageStyle,
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  ScrollView,
 } from 'react-native';
-import {
-  PlayIcon, PauseIcon, SearchIcon, HeartIcon, HomeIcon, LibraryIcon,
-} from '../components/Icons';
+import { PlayIcon, SearchIcon } from '../components/Icons';
+import BottomTabBar from '../components/BottomTabBar';
+import MiniPlayer from '../components/MiniPlayer';
+import { catalogService } from '../services/catalogService';
+import type { Song } from '../types';
 
 const SPOTIFY_GREEN = '#1DB954';
-const GRADIENT_GREEN = ['#1DB954', '#169C46'];
 
-const albums = [
-  { id: 'a1', src: require('../assets/album-1.jpg'), title: 'Neon Pulse', artist: 'Aurora Wave' },
-  { id: 'a2', src: require('../assets/album-2.jpg'), title: 'Midnight Echo', artist: 'Lux Ferre' },
-  { id: 'a3', src: require('../assets/album-3.jpg'), title: 'Liquid Chrome', artist: 'Nyx' },
-  { id: 'a4', src: require('../assets/album-4.jpg'), title: 'Sunset Vector', artist: 'Halo Drive' },
-  { id: 'a5', src: require('../assets/album-5.jpg'), title: 'Rainwindow', artist: 'Kira Lo' },
-  { id: 'a6', src: require('../assets/album-6.jpg'), title: 'Smoke Stage', artist: 'The Quartet' },
-];
+type AppScreen = 'discover' | 'nowplaying' | 'search' | 'library';
 
-type ScreenProps = { onNavigate: (screen: 'nowplaying' | 'discover') => void };
+type ScreenProps = {
+  onNavigate: (screen: AppScreen) => void;
+  currentSong: Song | null;
+  isPlaying: boolean;
+  onPlaySong: (song: Song, queue: Song[]) => void;
+  onTogglePlay: () => void;
+  playbackProgress: number;
+  isFavorite: (songId: string) => boolean;
+  onToggleFavorite: (songId: string) => void;
+};
 
-export default function DiscoverScreen({ onNavigate }: ScreenProps) {
-  const [tab, setTab] = useState<'home' | 'search' | 'library'>('search');
+export default function DiscoverScreen({
+  onNavigate,
+  currentSong,
+  isPlaying,
+  onPlaySong,
+  onTogglePlay,
+  playbackProgress,
+  isFavorite,
+  onToggleFavorite,
+}: ScreenProps) {
+  const songs = catalogService.getSongsSync();
+  const heroSong = useMemo(() => songs[0] ?? null, [songs]);
+
+  const featuredArtists = useMemo(() => {
+    const artistMap = new Map<string, { name: string; count: number }>();
+    songs.forEach(s => {
+      const name = s.artist?.name ?? 'Inconnu';
+      const id = s.artist_id;
+      if (!artistMap.has(id)) artistMap.set(id, { name, count: 1 });
+      else artistMap.get(id)!.count++;
+    });
+    return Array.from(artistMap.entries())
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 6);
+  }, [songs]);
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <View style={styles.bgGrad} />
-
-      {/* status bar */}
-      <View style={styles.statusBar}>
-        <Text style={styles.statusText}>9:41</Text>
-        <Text style={styles.statusText}>●●● ▮▮▮</Text>
-      </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerSub}>Made for you</Text>
-            <Text style={styles.headerTitle}>Discover Weekly</Text>
+            <Text style={styles.headerSub}>Bienvenue</Text>
+            <Text style={styles.headerTitle}>Découvrir</Text>
           </View>
-          <TouchableOpacity style={styles.searchBtn}>
+          <TouchableOpacity style={styles.searchBtn} onPress={() => onNavigate('search')}>
             <SearchIcon size={18} color="#fff" />
           </TouchableOpacity>
         </View>
 
-        {/* hero card */}
-        <View style={styles.heroCard}>
-          <Image source={albums[3].src} style={styles.heroBg} />
-          <View style={styles.heroOverlay} />
-          <View style={styles.heroContent}>
-            <View style={styles.heroBadge}>
-              <Text style={styles.heroBadgeText}>Weekly mix</Text>
+        {heroSong ? (
+          <View style={styles.heroCard}>
+            <Image source={catalogService.getCoverForIndex(0)} style={styles.heroBg} />
+            <View style={styles.heroOverlay} />
+            <View style={styles.heroContent}>
+              <View style={styles.heroBadge}>
+                <Text style={styles.heroBadgeText}>À la une</Text>
+              </View>
+              <View style={styles.heroTextGroup}>
+                <Text style={styles.heroText} numberOfLines={2}>
+                  {heroSong.title}
+                </Text>
+                <Text style={styles.heroMeta} numberOfLines={1}>
+                  {heroSong.artist?.name ?? 'Artiste inconnu'} ·{' '}
+                  {Math.round(heroSong.duration_seconds / 60)} min
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={styles.heroPlayBtn}
+                onPress={() => onPlaySong(heroSong, songs)}>
+                <PlayIcon size={20} color="#fff" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.heroTextGroup}>
-              <Text style={styles.heroText}>Your soundtrack{'\n'}for this week</Text>
-              <Text style={styles.heroMeta}>30 songs · 1 hr 42 min · Updated Monday</Text>
-            </View>
-            <TouchableOpacity style={styles.heroPlayBtn}>
-              <PlayIcon size={20} color="#fff" />
-            </TouchableOpacity>
           </View>
+        ) : null}
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Artistes populaires</Text>
+          <TouchableOpacity onPress={() => onNavigate('library')}>
+            <Text style={styles.sectionSeeAll}>Voir tout</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* in rotation grid */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.artistsRow}>
+          {featuredArtists.map(([id, { name, count }], idx) => (
+            <View key={id} style={styles.artistCard}>
+              <View
+                style={[
+                  styles.artistAvatar,
+                  { backgroundColor: ARTIST_COLORS[idx % ARTIST_COLORS.length] },
+                ]}>
+                <Text style={styles.artistInitial}>{name.charAt(0).toUpperCase()}</Text>
+              </View>
+              <Text style={styles.artistName} numberOfLines={1}>
+                {name}
+              </Text>
+              <Text style={styles.artistSongCount}>
+                {count} titre{count > 1 ? 's' : ''}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>In rotation</Text>
-          <Text style={styles.sectionSeeAll}>SEE ALL</Text>
+          <Text style={styles.sectionTitle}>Tous les titres</Text>
+          <Text style={styles.sectionSeeAll}>{songs.length} titres</Text>
         </View>
 
         <View style={styles.grid}>
-          {albums.map((a) => (
-            <View key={a.id} style={styles.gridCard}>
-              <Image source={a.src} style={styles.gridImage} />
+          {songs.map((song, index) => (
+            <TouchableOpacity
+              key={song.id}
+              style={styles.gridCard}
+              onPress={() => onPlaySong(song, songs)}
+              activeOpacity={0.85}>
+              <Image source={catalogService.getCoverForIndex(index)} style={styles.gridImage} />
               <View style={styles.gridInfo}>
-                <Text style={styles.gridTitle} numberOfLines={1}>{a.title}</Text>
-                <Text style={styles.gridArtist} numberOfLines={1}>{a.artist}</Text>
+                <Text style={styles.gridTitle} numberOfLines={1}>
+                  {song.title}
+                </Text>
+                <Text style={styles.gridArtist} numberOfLines={1}>
+                  {song.artist?.name ?? 'Artiste inconnu'}
+                </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* mini player */}
-      <TouchableOpacity style={styles.miniPlayer} onPress={() => onNavigate('nowplaying')}>
-        <Image source={albums[0].src} style={styles.miniCover} />
-        <View style={styles.miniInfo}>
-          <Text style={styles.miniTitle} numberOfLines={1}>Velvet Sky</Text>
-          <Text style={styles.miniArtist} numberOfLines={1}>Aurora Wave</Text>
-        </View>
-        <HeartIcon size={16} color={SPOTIFY_GREEN} fill />
-        <TouchableOpacity style={styles.miniPlayBtn}>
-          <PauseIcon size={16} color="#fff" />
-        </TouchableOpacity>
-      </TouchableOpacity>
-      <View style={styles.miniProgress}>
-        <View style={[styles.miniProgressFill, { width: '42%' }]} />
-      </View>
+      {currentSong ? (
+        <MiniPlayer
+          currentSong={currentSong}
+          isPlaying={isPlaying}
+          isLiked={isFavorite(currentSong.id)}
+          progressPercent={playbackProgress}
+          onOpenNowPlaying={() => onNavigate('nowplaying')}
+          onTogglePlay={onTogglePlay}
+          onToggleLike={() => onToggleFavorite(currentSong.id)}
+        />
+      ) : null}
 
-      {/* tab bar */}
-      <View style={styles.tabBar}>
-        <TabBtn icon={<HomeIcon size={20} color={tab === 'home' ? '#fff' : 'rgba(255,255,255,0.55)'} />} label="Home" active={tab === 'home'} onPress={() => setTab('home')} />
-        <TabBtn icon={<SearchIcon size={20} color={tab === 'search' ? '#fff' : 'rgba(255,255,255,0.55)'} />} label="Search" active={tab === 'search'} onPress={() => setTab('search')} />
-        <TabBtn icon={<LibraryIcon size={20} color={tab === 'library' ? '#fff' : 'rgba(255,255,255,0.55)'} />} label="Library" active={tab === 'library'} onPress={() => setTab('library')} />
-      </View>
+      <BottomTabBar active="discover" onNavigate={onNavigate} />
     </View>
   );
 }
 
-function TabBtn({ icon, label, active, onPress }: {
-  icon: React.ReactNode; label: string; active: boolean; onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity style={styles.tabItem} onPress={onPress}>
-      {icon}
-      <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
+const ARTIST_COLORS = ['#1DB954', '#E91E63', '#FF9800', '#2196F3', '#9C27B0', '#00BCD4'];
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A12',
-  } as ViewStyle,
-
-  bgGrad: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#0A0A12',
-  } as ViewStyle,
-
-  statusBar: {
-    height: 44,
-    paddingHorizontal: 28,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  } as ViewStyle,
-  statusText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 11,
-    letterSpacing: 1,
-  } as ViewStyle,
-
-  scroll: {
-    flex: 1,
-  } as ViewStyle,
-
+  container: { flex: 1, backgroundColor: '#0A0A12' },
+  scroll: { flex: 1 },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 8,
+    paddingTop: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  } as ViewStyle,
-  headerSub: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-  } as ViewStyle,
+  },
+  headerSub: { fontSize: 12, color: 'rgba(255,255,255,0.6)' },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: '700',
     letterSpacing: -0.5,
     color: '#fff',
     marginTop: 2,
-  } as ViewStyle,
+  },
   searchBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
-  } as ViewStyle,
-
+  },
   heroCard: {
     marginHorizontal: 24,
-    marginTop: 16,
-    height: 180,
-    borderRadius: 16,
+    marginTop: 20,
+    height: 190,
+    borderRadius: 20,
     overflow: 'hidden',
-  } as ViewStyle,
-  heroBg: {
-    ...StyleSheet.absoluteFill,
-    width: '100%',
-    height: '100%',
-  } as ImageStyle,
+  },
+  heroBg: { position: 'absolute', width: '100%', height: '100%' },
   heroOverlay: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  } as ViewStyle,
-  heroContent: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'space-between',
-  } as ViewStyle,
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  heroContent: { flex: 1, padding: 18, justifyContent: 'space-between' },
   heroBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(29, 185, 84, 0.35)',
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  } as ViewStyle,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
   heroBadgeText: {
     fontSize: 10,
     letterSpacing: 2,
     textTransform: 'uppercase',
     color: '#fff',
-  } as ViewStyle,
-  heroTextGroup: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-  } as ViewStyle,
-  heroText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-    lineHeight: 26,
-  } as ViewStyle,
-  heroMeta: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-  } as ViewStyle,
+    fontWeight: '600',
+  },
+  heroTextGroup: { position: 'absolute', bottom: 18, left: 18 },
+  heroText: { fontSize: 22, fontWeight: '700', color: '#fff', lineHeight: 28 },
+  heroMeta: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
   heroPlayBtn: {
     position: 'absolute',
-    bottom: 16,
-    right: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    bottom: 18,
+    right: 18,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: SPOTIFY_GREEN,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: SPOTIFY_GREEN,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 8,
-  } as ViewStyle,
-
+  },
+  artistsRow: { paddingHorizontal: 24, gap: 14 },
+  artistCard: { alignItems: 'center', width: 80 },
+  artistAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  artistInitial: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  artistName: { fontSize: 11, fontWeight: '600', color: '#fff', textAlign: 'center' },
+  artistSongCount: { fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    marginTop: 24,
-    marginBottom: 12,
-  } as ViewStyle,
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-  } as ViewStyle,
-  sectionSeeAll: {
-    fontSize: 10,
-    letterSpacing: 2,
-    color: 'rgba(255,255,255,0.55)',
-  } as ViewStyle,
-
+    marginTop: 28,
+    marginBottom: 14,
+  },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: '#fff' },
+  sectionSeeAll: { fontSize: 12, color: SPOTIFY_GREEN, fontWeight: '500' },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 24,
     gap: 10,
-  } as ViewStyle,
+  },
   gridCard: {
     width: '47%',
     flexDirection: 'row',
@@ -278,108 +277,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 6,
     gap: 8,
-  } as ViewStyle,
-  gridImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-  } as ImageStyle,
-  gridInfo: {
-    flex: 1,
-  } as ViewStyle,
-  gridTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
-  } as ViewStyle,
-  gridArtist: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-    marginTop: 1,
-  } as ViewStyle,
-
-  miniPlayer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(30, 30, 50, 0.85)',
-    marginHorizontal: 12,
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    gap: 10,
-    position: 'absolute',
-    bottom: 80,
-    left: 0,
-    right: 0,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-  } as ViewStyle,
-  miniCover: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-  } as ImageStyle,
-  miniInfo: {
-    flex: 1,
-  } as ViewStyle,
-  miniTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#fff',
-  } as ViewStyle,
-  miniArtist: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-  } as ViewStyle,
-  miniPlayBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: SPOTIFY_GREEN,
-    alignItems: 'center',
-    justifyContent: 'center',
-  } as ViewStyle,
-
-  miniProgress: {
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginHorizontal: 12,
-    position: 'absolute',
-    bottom: 76,
-    left: 0,
-    right: 0,
-    borderRadius: 1,
-    overflow: 'hidden',
-  } as ViewStyle,
-  miniProgressFill: {
-    height: '100%',
-    backgroundColor: SPOTIFY_GREEN,
-    borderRadius: 1,
-  } as ViewStyle,
-
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: 'rgba(30, 30, 50, 0.85)',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    paddingTop: 12,
-    paddingBottom: 24,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  } as ViewStyle,
-  tabItem: {
-    alignItems: 'center',
-    gap: 4,
-  } as ViewStyle,
-  tabLabel: {
-    fontSize: 10,
-    color: 'rgba(255,255,255,0.55)',
-  } as ViewStyle,
-  tabLabelActive: {
-    color: '#fff',
-  } as ViewStyle,
+  },
+  gridImage: { width: 46, height: 46, borderRadius: 8 },
+  gridInfo: { flex: 1 },
+  gridTitle: { fontSize: 12, fontWeight: '600', color: '#fff' },
+  gridArtist: { fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 2 },
 });
