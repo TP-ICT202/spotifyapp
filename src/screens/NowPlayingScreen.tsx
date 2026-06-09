@@ -43,6 +43,8 @@ type ScreenProps = {
   position: number;
   duration: number;
   audioError: string | null;
+  cacheRatio: number;
+  cached: boolean;
   isFavorite: (songId: string) => boolean;
   onToggleFavorite: (songId: string) => void;
 };
@@ -66,6 +68,8 @@ export default function NowPlayingScreen({
   position,
   duration,
   audioError,
+  cacheRatio,
+  cached,
   isFavorite,
   onToggleFavorite,
 }: ScreenProps) {
@@ -206,6 +210,15 @@ export default function NowPlayingScreen({
             {formatTime(duration || currentSong.duration_seconds)}
           </Text>
         </View>
+        {cached ? (
+          <Text style={styles.cacheStatus}>
+            ⬇ Disponible hors-ligne
+          </Text>
+        ) : cacheRatio > 0 && cacheRatio < 1 ? (
+          <Text style={styles.cacheStatus}>
+            ⬇ Mise en cache… {Math.round(cacheRatio * 100)}%
+          </Text>
+        ) : null}
       </View>
 
       {/* Error */}
@@ -249,6 +262,13 @@ export default function NowPlayingScreen({
 }
 
 const styles = StyleSheet.create({
+  cacheStatus: {
+    marginTop: 6,
+    fontSize: 11,
+    color: SPOTIFY_GREEN,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
   emptyContainer: {
     flex: 1,
     backgroundColor: '#0A0A12',

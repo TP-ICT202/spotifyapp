@@ -38,3 +38,19 @@ jest.mock('@react-native-async-storage/async-storage', () => {
 });
 
 jest.mock('react-native-video', () => 'Video');
+
+jest.mock('@dr.pogodin/react-native-fs', () => ({
+  __esModule: true,
+  CachesDirectoryPath: '/tmp/caches',
+  DocumentDirectoryPath: '/tmp/documents',
+  exists: jest.fn(() => Promise.resolve(false)),
+  mkdir: jest.fn(() => Promise.resolve()),
+  unlink: jest.fn(() => Promise.resolve()),
+  moveFile: jest.fn(() => Promise.resolve()),
+  readDir: jest.fn(() => Promise.resolve([])),
+  stopDownload: jest.fn(),
+  downloadFile: jest.fn(() => ({
+    jobId: 1,
+    promise: Promise.resolve({ statusCode: 200, bytesWritten: 0 }),
+  })),
+}));

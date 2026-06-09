@@ -14,6 +14,7 @@ import NowPlayingScreen from './src/screens/NowPlayingScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
 import GlobalAudioPlayer from './src/components/GlobalAudioPlayer';
+import { clearCache } from './src/services/audioCacheService';
 
 type AuthScreen = 'loading' | 'login' | 'signup' | 'app';
 type AppScreen = 'discover' | 'nowplaying' | 'search' | 'library';
@@ -28,6 +29,8 @@ export default function App() {
   const [positionSec, setPositionSec] = useState(0);
   const [durationSec, setDurationSec] = useState(0);
   const [audioError, setAudioError] = useState<string | null>(null);
+  const [cacheRatio, setCacheRatio] = useState(0);
+  const [cached, setCached] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [catalogReady, setCatalogReady] = useState(false);
 
@@ -90,12 +93,31 @@ export default function App() {
   const goToNextSong = () => goToAdjacentSong(1);
   const goToPreviousSong = () => goToAdjacentSong(-1);
 
+  const nextSong = (() => {
+    if (!currentSong || queue.length === 0) return null;
+    const index = queue.findIndex(song => song.id === currentSong.id);
+    if (index < 0) return null;
+    return queue[(index + 1) % queue.length] ?? null;
+  })();
+
+  const handleCacheStatus = ({
+    ratio,
+    cached: isDone,
+  }: {
+    ratio: number;
+    cached: boolean;
+  }) => {
+    setCacheRatio(ratio);
+    setCached(isDone);
+  };
+
   const handleLogout = async () => {
     try {
       await authService.signOut();
     } catch {
       // Déconnexion locale même si le réseau échoue
     }
+    clearCache().catch(() => {});
     setAuthScreen('login');
     setCatalogReady(false);
     setCurrentSong(null);
@@ -196,10 +218,12 @@ export default function App() {
         {/* Lecteur audio global : la lecture continue d'un écran à l'autre. */}
         <GlobalAudioPlayer
           currentSong={currentSong}
+          nextSong={nextSong}
           isPlaying={isPlaying}
           onProgress={handleAudioProgress}
           onTrackEnded={goToNextSong}
           onError={setAudioError}
+          onCacheStatus={handleCacheStatus}
         />
         {appScreen === 'discover' && <DiscoverScreen {...screenProps} />}
         {appScreen === 'nowplaying' && (
@@ -210,6 +234,8 @@ export default function App() {
             position={positionSec}
             duration={durationSec}
             audioError={audioError}
+            cacheRatio={cacheRatio}
+            cached={cached}
           />
         )}
         {appScreen === 'search' && <SearchScreen {...screenProps} />}

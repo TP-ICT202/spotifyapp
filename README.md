@@ -8,8 +8,10 @@ Application mobile de streaming musical type Spotify, développée en **React Na
 - **Découverte** : flux d'accueil avec albums et titres.
 - **Recherche** : recherche de morceaux par titre / artiste.
 - **Lecture audio** : lecteur global (react-native-video) avec mini-lecteur et écran « Now Playing » (vinyle animé, progression, suivant / précédent).
+- **Envoi & récupération via la plateforme** : téléversement des MP3 vers Supabase Storage (`npm run sync:music`) et streaming depuis la plateforme.
+- **Lecture intelligente avec cache progressif** : le morceau en cours est téléchargé progressivement dans le cache de l'appareil pendant la lecture (et le suivant pré-chargé), puis **supprimé automatiquement dès qu'on le traverse** — aucune accumulation de fichiers sur le téléphone.
+- **Mode hors-ligne** : lecture des MP3 locaux (18 titres embarqués + fichiers déjà mis en cache) sans réseau ; repli automatique sur le fichier local si le streaming échoue.
 - **Favoris** : like / unlike de titres, bibliothèque des morceaux aimés.
-- **Mode hors-ligne** : 18 MP3 embarqués jouables sans réseau ; sinon streaming depuis Supabase Storage.
 - **Historique d'écoute** : enregistrement automatique des lectures.
 
 ## Stack
@@ -18,6 +20,7 @@ Application mobile de streaming musical type Spotify, développée en **React Na
 - TypeScript
 - Supabase (`@supabase/supabase-js`) — Auth, Postgres, Storage
 - `react-native-video` pour la lecture audio
+- `@dr.pogodin/react-native-fs` pour le cache audio (téléchargement / suppression sur disque)
 - `@react-native-async-storage/async-storage` pour la persistance de session
 
 ## Prérequis
@@ -88,7 +91,8 @@ src/
   config/env.ts          Clés Supabase (publiques)
   data/localMusicData.ts Catalogue MP3 embarqué (mode hors-ligne)
   screens/               Login, SignUp, Discover, Search, Library, NowPlaying, Offline
-  services/              auth, catalog, music, favorites, network, audioResolver, supabaseClient
+  services/              auth, catalog, music, favorites, network, audioResolver,
+                         audioCacheService (cache intelligent), supabaseClient
   types/                 Modèles TypeScript partagés
 android/                 Projet Android natif
 musiques/                Fichiers MP3 embarqués
