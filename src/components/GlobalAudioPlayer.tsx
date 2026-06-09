@@ -25,6 +25,7 @@ export default function GlobalAudioPlayer({
   const playbackSource = useMemo(() => {
     if (!currentSong) return null;
     return resolvePlaybackSource(currentSong);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSong?.id, currentSong?.audio_url]);
 
   if (!playbackSource || !currentSong) return null;

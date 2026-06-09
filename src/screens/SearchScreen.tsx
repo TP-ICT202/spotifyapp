@@ -49,7 +49,7 @@ export default function SearchScreen({
 }: ScreenProps) {
   const [query, setQuery] = useState('');
   const allSongs = catalogService.getSongsSync();
-  const results = useMemo(() => catalogService.searchSongs(query), [query, allSongs]);
+  const results = useMemo(() => catalogService.searchSongs(query), [query]);
   const hasQuery = query.trim().length > 0;
   const displayList = hasQuery ? results : allSongs;
 

@@ -1,4 +1,4 @@
-import { View, StyleSheet, type ViewStyle } from 'react-native';
+import { View, type ViewStyle } from 'react-native';
 
 function icon(size: number): ViewStyle {
   return { width: size, height: size, alignItems: 'center', justifyContent: 'center' };

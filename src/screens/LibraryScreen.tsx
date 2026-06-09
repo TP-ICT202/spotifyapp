@@ -71,7 +71,7 @@ export default function LibraryScreen({
   const playlistSongs = useMemo(() => {
     if (!selectedPlaylist) return [];
     return catalogService.getPlaylistSongs(selectedPlaylist.id, favoriteIds);
-  }, [selectedPlaylist, favoriteIds, songs]);
+  }, [selectedPlaylist, favoriteIds]);
 
   const renderSongList = (list: Song[]) =>
     list.map((song, idx) => {

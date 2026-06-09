@@ -12,7 +12,11 @@ import {
   type ViewStyle,
   type ImageStyle,
 } from 'react-native';
-import Video, { type OnLoadData, type OnProgressData } from 'react-native-video';
+import Video, {
+  type OnLoadData,
+  type OnProgressData,
+  type ReactVideoSource,
+} from 'react-native-video';
 import {
   ChevronDownIcon,
   MoreHorizontalIcon,
@@ -173,9 +177,9 @@ export default function NowPlayingScreen({
       <StatusBar barStyle="light-content" />
 
       {/* Audio Player — lecture locale */}
-      {audioSource ? (
+      {audioSource != null ? (
         <Video
-          source={audioSource}
+          source={audioSource as unknown as ReactVideoSource}
           paused={!isPlaying}
           playInBackground
           playWhenInactive
