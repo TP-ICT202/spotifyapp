@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,6 @@ import {
   type ViewStyle,
   type ImageStyle,
 } from 'react-native';
-import Video, {
-  type OnLoadData,
-  type OnProgressData,
-  type ReactVideoSource,
-} from 'react-native-video';
 import {
   ChevronDownIcon,
   MoreHorizontalIcon,
@@ -32,7 +27,6 @@ import {
   Equalizer,
 } from '../components/Icons';
 import { catalogService } from '../services/catalogService';
-import { musicService } from '../services/musicService';
 import type { Song } from '../types';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -46,8 +40,9 @@ type ScreenProps = {
   onTogglePlay: () => void;
   onNext: () => void;
   onPrevious: () => void;
-  onTrackEnded: () => void;
-  onProgressUpdate: (percent: number) => void;
+  position: number;
+  duration: number;
+  audioError: string | null;
   isFavorite: (songId: string) => boolean;
   onToggleFavorite: (songId: string) => void;
 };
@@ -68,26 +63,13 @@ export default function NowPlayingScreen({
   onTogglePlay,
   onNext,
   onPrevious,
-  onTrackEnded,
-  onProgressUpdate,
+  position,
+  duration,
+  audioError,
   isFavorite,
   onToggleFavorite,
 }: ScreenProps) {
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [audioError, setAudioError] = useState<string | null>(null);
-  const loggedPlayRef = useRef(false);
-
   const spinAnim = useRef(new Animated.Value(0)).current;
-
-  // Reset position quand on change de morceau
-  useEffect(() => {
-    if (!currentSong) return;
-    setPosition(0);
-    setDuration(currentSong.duration_seconds ?? 0);
-    setAudioError(null);
-    loggedPlayRef.current = false;
-  }, [currentSong]);
 
   // Animation vinyle
   useEffect(() => {
@@ -126,32 +108,6 @@ export default function NowPlayingScreen({
 
   const currentCover = useMemo(() => catalogService.getCoverForIndex(songIndex), [songIndex]);
 
-  const audioSource = useMemo(() => {
-    if (!currentSong) return null;
-    return catalogService.getAudioSource(currentSong.id);
-  }, [currentSong]);
-
-  const handleProgress = (data: OnProgressData) => {
-    setPosition(data.currentTime);
-    const total = duration || currentSong?.duration_seconds || 1;
-    onProgressUpdate(Math.max(0, Math.min(100, (data.currentTime / total) * 100)));
-
-    if (
-      currentSong &&
-      !loggedPlayRef.current &&
-      data.currentTime >= 30
-    ) {
-      loggedPlayRef.current = true;
-      musicService.logPlayHistory(currentSong.id, Math.floor(data.currentTime)).catch(() => {});
-    }
-  };
-
-  const handleLoad = (data: OnLoadData) => {
-    if (Number.isFinite(data.duration) && data.duration > 0) {
-      setDuration(data.duration);
-    }
-  };
-
   if (!currentSong) {
     return (
       <View style={styles.emptyContainer}>
@@ -175,26 +131,6 @@ export default function NowPlayingScreen({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
-
-      {/* Audio Player — lecture locale */}
-      {audioSource != null ? (
-        <Video
-          source={audioSource as unknown as ReactVideoSource}
-          paused={!isPlaying}
-          playInBackground
-          playWhenInactive
-          onProgress={handleProgress}
-          onLoad={handleLoad}
-          onEnd={onTrackEnded}
-          onError={event => {
-            setAudioError(
-              'Erreur de lecture audio. Vérifie que le fichier MP3 est bien dans musiques/.',
-            );
-            console.error('Audio playback error:', event);
-          }}
-          style={styles.hiddenPlayer}
-        />
-      ) : null}
 
       {/* Background */}
       <View style={styles.backgroundGrad} />
@@ -313,13 +249,6 @@ export default function NowPlayingScreen({
 }
 
 const styles = StyleSheet.create({
-  hiddenPlayer: {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    opacity: 0,
-  } as ViewStyle,
-
   emptyContainer: {
     flex: 1,
     backgroundColor: '#0A0A12',
