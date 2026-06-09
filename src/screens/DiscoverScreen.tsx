@@ -208,7 +208,11 @@ const styles = StyleSheet.create({
   },
   heroBg: { position: 'absolute', width: '100%', height: '100%' },
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
   heroContent: { flex: 1, padding: 18, justifyContent: 'space-between' },

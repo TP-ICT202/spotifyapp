@@ -49,6 +49,8 @@ export default function SignUpScreen({ onSignUpSuccess, onNavigateToLogin }: Sig
       Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
     ]).start();
+    // fadeAnim / slideAnim sont des refs stables
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const validateField = (name: string, value: string, extra?: string): string => {
@@ -155,7 +157,7 @@ export default function SignUpScreen({ onSignUpSuccess, onNavigateToLogin }: Sig
             <Text style={styles.successEmail}>{email}</Text>
           </Text>
           <Text style={styles.successHint}>Vérifie ta boîte mail puis reviens te connecter.</Text>
-          <TouchableOpacity style={styles.btnPrimary} onPress={onNavigateToLogin}>
+          <TouchableOpacity style={styles.btnPrimary} onPress={onSignUpSuccess}>
             <Text style={styles.btnPrimaryText}>Aller à la connexion</Text>
           </TouchableOpacity>
         </View>
@@ -254,6 +256,19 @@ export default function SignUpScreen({ onSignUpSuccess, onNavigateToLogin }: Sig
                 </View>
                 {touched.password && fieldErrors.password ? (
                   <Text style={styles.inlineError}>⚠ {fieldErrors.password}</Text>
+                ) : null}
+                {strength ? (
+                  <View style={styles.strengthWrap}>
+                    <View style={styles.strengthBar}>
+                      <View
+                        style={[
+                          styles.strengthFill,
+                          { width: strength.width as `${number}%`, backgroundColor: strength.color },
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.strengthLabel, { color: strength.color }]}>{strength.label}</Text>
+                  </View>
                 ) : null}
               </View>
 

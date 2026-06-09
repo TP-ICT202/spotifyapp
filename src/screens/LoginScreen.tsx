@@ -43,6 +43,8 @@ export default function LoginScreen({ onLoginSuccess, onNavigateToSignUp }: Logi
       Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
     ]).start();
+    // fadeAnim / slideAnim sont des refs stables
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Validation d'un champ individuel

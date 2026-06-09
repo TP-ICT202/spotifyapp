@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { NativeModules, Platform, UIManager } from 'react-native';
-import Video, { type OnLoadData, type OnProgressData } from 'react-native-video';
+import Video, {
+  type OnLoadData,
+  type OnProgressData,
+  type ReactVideoSource,
+} from 'react-native-video';
 
 type Props = {
   source: number | { uri: string };
@@ -50,9 +54,13 @@ export default function NativeAudioPlayer({
     return null;
   }
 
+  // Un asset embarqué (require) est un nombre ; react-native-video l'accepte
+  // au runtime mais ses types n'exposent que ReactVideoSource.
+  const videoSource = source as unknown as ReactVideoSource;
+
   return (
     <Video
-      source={source}
+      source={videoSource}
       paused={paused}
       playInBackground
       playWhenInactive

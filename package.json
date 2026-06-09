@@ -12,6 +12,7 @@
     "icons": "python3 scripts/generate_app_icons.py"
   },
   "dependencies": {
+    "@dr.pogodin/react-native-fs": "^2.38.2",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-native/new-app-screen": "0.85.3",
     "@supabase/supabase-js": "^2.106.2",

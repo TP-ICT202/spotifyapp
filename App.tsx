@@ -13,6 +13,8 @@ import DiscoverScreen from './src/screens/DiscoverScreen';
 import NowPlayingScreen from './src/screens/NowPlayingScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import LibraryScreen from './src/screens/LibraryScreen';
+import GlobalAudioPlayer from './src/components/GlobalAudioPlayer';
+import { clearCache } from './src/services/audioCacheService';
 
 type AuthScreen = 'loading' | 'login' | 'signup' | 'app';
 type AppScreen = 'discover' | 'nowplaying' | 'search' | 'library';
@@ -24,6 +26,11 @@ export default function App() {
   const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackProgress, setPlaybackProgress] = useState(0);
+  const [positionSec, setPositionSec] = useState(0);
+  const [durationSec, setDurationSec] = useState(0);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [cacheRatio, setCacheRatio] = useState(0);
+  const [cached, setCached] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [catalogReady, setCatalogReady] = useState(false);
 
@@ -45,12 +52,29 @@ export default function App() {
     [favoriteIds],
   );
 
-  const setPlaybackFromDiscover = (song: Song, songs: Song[]) => {
-    setQueue(songs);
+  const startSong = (song: Song) => {
     setCurrentSong(song);
     setIsPlaying(true);
     setPlaybackProgress(0);
+    setPositionSec(0);
+    setDurationSec(song.duration_seconds ?? 0);
+    setAudioError(null);
+  };
+
+  const setPlaybackFromDiscover = (song: Song, songs: Song[]) => {
+    setQueue(songs);
+    startSong(song);
     setAppScreen('nowplaying');
+  };
+
+  const handleAudioProgress = (currentTime: number, total: number) => {
+    setPositionSec(currentTime);
+    if (total > 0) {
+      setDurationSec(total);
+      setPlaybackProgress(
+        Math.max(0, Math.min(100, (currentTime / total) * 100)),
+      );
+    }
   };
 
   const togglePlay = () => {
@@ -63,13 +87,29 @@ export default function App() {
     const index = queue.findIndex(song => song.id === currentSong.id);
     if (index < 0) return;
     const nextIndex = (index + direction + queue.length) % queue.length;
-    setCurrentSong(queue[nextIndex]);
-    setIsPlaying(true);
-    setPlaybackProgress(0);
+    startSong(queue[nextIndex]);
   };
 
   const goToNextSong = () => goToAdjacentSong(1);
   const goToPreviousSong = () => goToAdjacentSong(-1);
+
+  const nextSong = (() => {
+    if (!currentSong || queue.length === 0) return null;
+    const index = queue.findIndex(song => song.id === currentSong.id);
+    if (index < 0) return null;
+    return queue[(index + 1) % queue.length] ?? null;
+  })();
+
+  const handleCacheStatus = ({
+    ratio,
+    cached: isDone,
+  }: {
+    ratio: number;
+    cached: boolean;
+  }) => {
+    setCacheRatio(ratio);
+    setCached(isDone);
+  };
 
   const handleLogout = async () => {
     try {
@@ -77,6 +117,7 @@ export default function App() {
     } catch {
       // Déconnexion locale même si le réseau échoue
     }
+    clearCache().catch(() => {});
     setAuthScreen('login');
     setCatalogReady(false);
     setCurrentSong(null);
@@ -174,14 +215,27 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
+        {/* Lecteur audio global : la lecture continue d'un écran à l'autre. */}
+        <GlobalAudioPlayer
+          currentSong={currentSong}
+          nextSong={nextSong}
+          isPlaying={isPlaying}
+          onProgress={handleAudioProgress}
+          onTrackEnded={goToNextSong}
+          onError={setAudioError}
+          onCacheStatus={handleCacheStatus}
+        />
         {appScreen === 'discover' && <DiscoverScreen {...screenProps} />}
         {appScreen === 'nowplaying' && (
           <NowPlayingScreen
             {...screenProps}
             onNext={goToNextSong}
             onPrevious={goToPreviousSong}
-            onTrackEnded={goToNextSong}
-            onProgressUpdate={setPlaybackProgress}
+            position={positionSec}
+            duration={durationSec}
+            audioError={audioError}
+            cacheRatio={cacheRatio}
+            cached={cached}
           />
         )}
         {appScreen === 'search' && <SearchScreen {...screenProps} />}
